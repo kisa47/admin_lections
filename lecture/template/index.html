@@ -28,6 +28,7 @@
 					<p>
 						<small>Сурцов Владимир Владимирович</small>
 					</p>
+					<div style="display: inline-block;" id="qr-container"></div>
 				</section>
 				<section>
 					<h2>Содержание лекции</h2>
@@ -51,8 +52,18 @@
 			<i class="fa fa-list-ul fa-2x"></i>
 		</a>
 	</aside>
-
+	<script src="../../js/qrcode.min.js"></script> </head>
 	<script src="../../js/bundle.min.js"></script>
+	<script> 
+		const myLink = "https://kisa47.github.io/admin_lections/";
+		new QRCode(document.getElementById("qr-container"), {
+			text: myLink, width: 256,
+			height: 256,
+			colorDark : "#000000",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H 
+		});
+	</script>
 </body>
 
 </html>
