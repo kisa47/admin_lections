@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8">
+	<title>Название лекции</title>
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	<meta name="author" content="">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="../../css/bundle.min.css">
+	<script src="../../js/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+	<!--[if lt IE 9]>
+		<script src="../../js/html5shiv.min.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<section>
+					<h1>Языки разметки и задание конфигураций</h1>
+					<h3>Администрирование информационных систем</h3>
+					<p>
+						<small>Сурцов Владимир Владимирович</small>
+					</p>
+					<a href="https://kisa47.github.io/admin_lections/" style="display: inline-block;" id="qr-container"></a>
+				</section>
+				<section>
+					<h2>Содержание лекции</h2>
+					<nav id="presentable-toc" class="table-content"></nav>
+				</section>
+			</section>
+			<section>
+				<h2>Языки разметки</h2>
+				<section>
+					<blockquote>Языки разметки и форматы сериализации данных,
+						используемые для конфигураций, эволюционировали от
+						строгих корпоративных стандартов к форматам,
+						оптимизированным для чтения человеком. Выбор конкретного
+						формата зависит от сложности структуры, требований к типизации
+						и экосистемы, в которой работает программа.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Общие принципы</h3>
+					<blockquote>
+						Несмотря на различия в синтаксисе, все языки разметки для конфигураций преследуют общие инженерные цели и подчиняются схожим правилам работы со специальными символами. Эти принципы обеспечивают предсказуемость, читаемость и возможность автоматической обработки файлов.
+					</blockquote>
+					<ul>
+						<li>Человекочитаемость.</li>
+						<li>Декларативность.</li>
+						<li>Иерархичность.</li>
+						<li>Типизация данных.</li>
+						<li>Предсказуемость (идемпотентность).</li>
+						<li>Модульность и переиспользование.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Спецсимволы.</h3>
+					<blockquote>
+						Специальные символы используются для обозначения структуры данных. Если их нужно использовать внутри самих данных (например, запятую внутри строки), применяются правила экранирования.
+					</blockquote>
+					Спецсимволы разделяются на:
+					<ul>
+						<li>Разделители структур</li>
+						<li>Кавычки и строковые литералы</li>
+						<li>Символы экранирования</li>
+						<li>Комментарии</li>
+						<li>Подстановка переменных и ссылки</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Разделители структур.</h3>
+					<blockquote>
+						Разделители структур — это базовые символы, которые определяют архитектуру данных в конфигурационном файле.
+						Они указывают парсеру, где заканчивается одно значение и начинается другое, где находится иерархический уровень и как группируются элементы.
+					</blockquote>
+					<pre><code class=json>{
+	"server": {
+		"listen": "0.0.0.0",
+		"port": 8080,
+		"urls": [
+			"host1.example.ru",
+			"host2.example.ru"
+		]
+	}
+}</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Кавычки и строковые литералы.</h3>
+					<blockquote>Кавычки в конфигурационных файлах выполняют две основные функции: определение границ строкового литерала и управление интерпретацией специальных символов внутри этой строки.</blockquote>
+				<pre><code class=yaml>path1: "C:\\new_folder"
+path2: 'C:\new_folder' # Результат будет идентичным
+text: |
+  Это многострочная
+  строка без кавычек</code></pre>
+					</section>
+					<section>
+						<br>
+						<h3>Символы экранирования</h3>
+						<blockquote>Экранирование (escaping) — это механизм, позволяющий вставить в строковый литерал символы, которые иначе были бы интерпретированы как часть синтаксиса (структуры) или были бы невидимы (управляющие символы).
+						</blockquote>
+						<blockquote>Обратная косая черта (\) называется символом-экраниатором (escape character). Она сообщает парсеру, что следующий за ней символ нужно трактовать особым образом.</blockquote>
+						<pre><code class=yaml>path1: "C:\\new_folder"
+path2: 'C:\new_folder' # Результат будет идентичным
+vandor1: 'LLC "Dacom M"'
+vandor2: "LLC \"Dacom M\""  # Результат будет идентичным</code></pre>
+					</section>
+					<section>
+						<br>
+						<h3>Комментарии</h3>
+						<blockquote>Комментарии в конфигурационных файлах служат для пояснения логики настроек, временного отключения директив (закомментирования) или оставления пометок для других разработчиков. Поддержка комментариев — это одно из главных отличий форматов, ориентированных на человека (YAML, TOML), от форматов машинного обмена (JSON).</blockquote>
+						<pre><code class="toml"># Настройки базы данных
+[database]
+host = "localhost" # локальный инстанс
+port = 5432
+# debug = true # Не применится, так как "закомментировано"</code></pre>
+					</section>
+					<section>
+						<br>
+						<h3>Подстановка переменных и ссылки</h3>
+						<blockquote>
+							Подстановка переменных и ссылки (references) позволяют избежать дублирования данных в конфигурационных файлах, собирать настройки из разных источников и создавать переиспользуемые шаблоны.
+						</blockquote>
+						<pre><code class="yaml"># Определяем общие настройки
+common_settings: &defaults
+  timeout: 30
+  retries: 3
+  log_level: info
+
+# Используем их в сервисе А
+service_a:
+  <<: *defaults # Вливаем все поля из defaults
+  host: db-a.internal
+
+# Используем в сервисе Б с переопределением одного поля
+service_b:
+  <<: *defaults
+  log_level: debug # Переопределяем только уровень логирования</code></pre>
+					</section>
+			</section>
+			<section>
+				<h2>INI</h2>
+				<section>
+					<br>
+					<blockquote>
+						Формат INI (Initialization File) — это один из старейших текстовых форматов для хранения конфигураций. Он зародился в операционных системах Windows, но благодаря своей предельной простоте стал стандартом для многих кроссплатформенных приложений.
+					</blockquote>
+					<pre><code class="ini">; ===========================
+; Настройки веб-сервера
+; ===========================
+[server]
+host = 127.0.0.1
+port = 8080
+; Режим работы: development или production
+environment = development
+
+[database]
+; Подключение к основной БД
+type = postgresql
+host = db.internal.local
+port = 5432
+name = app_db
+user = app_user
+password = secret_password
+
+; Пути к данным
+[paths]
+log_dir = /var/log/myapp
+temp_dir = /tmp/myapp</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Секции (Sections)</h3>
+					<blockquote>
+						Имена секций пишутся на отдельных строках и заключаются в квадратные скобки [  ]. Все директивы, идущие после заголовка секции, относятся к ней, пока не начнется следующая секция.
+					</blockquote>
+					<pre><code class="ini">; настройки для сервера
+[server]
+
+; настройки для БД
+[database]
+
+; Пути к данным
+[paths]
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Директивы (Key-Value pairs)</h3>
+					<blockquote>
+						Это пары «ключ = значение». Знак равенства является разделителем. В классическом INI пробелы вокруг знака = обычно игнорируются, но для читаемости их принято ставить.
+					</blockquote>
+					<pre><code class="ini">host = 127.0.0.1
+port = 8080
+; Режим работы: development или production
+environment = development
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Комментарии</h3>
+					<blockquote>
+						Обычно начинаются с точки с запятой ;. Всё, что следует за этим символом до конца строки, игнорируется. Современные парсеры часто поддерживают и символ решетки #.
+					</blockquote>
+					<pre><code class="ini">host = 127.0.0.1
+; ===========================
+; Настройки веб-сервера
+; ===========================
+; Режим работы: development или production
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Преймущества</h3>
+					<ul>
+						<li>Простота написания: Не нужно помнить про запятые (как в JSON), кавычки для каждого ключа (как в JSON) или отступы (как в YAML).</li>
+						<li>Читаемость: Для плоских настроек (ключ-значение) это самый наглядный формат.</li>
+						<li>Легковесность: Парсер для INI можно написать в 10–15 строк кода на любом языке.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Недостатки</h3>
+					<ul>
+						<li>Нет вложенности: Нельзя естественным образом описать список словарей или глубоко вложенные объекты.</li>
+						<li>Нет типов: Все значения — строки. Число 8080 и строка "8080" для INI неразличимы.</li>
+						<li>Нет возможности задать многострочное значение.</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<h2>TOML</h2>
+				<section>
+				<blockquote>TOML (Tom's Obvious, Minimal Language) — это современный формат конфигурационных файлов, созданный Томом Престон-Вернером (сооснователем GitHub). Его главная цель — быть минималистичным, очевидным для человека и при этом абсолютно однозначным для парсера, избегая «магического» угадывания типов, как в YAML.</blockquote>
+				</section>
+				<section>
+					<br>
+					<pre><code class="toml" style="max-height: 100%"># Метаданные проекта
+[project]
+name = "my-awesome-app"
+version = "2.4.1"
+description = """Это многострочное описание
+моего приложения, которое читается
+очень легко."""
+
+# Зависимости (массив строк)
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0"
+]
+
+# Настройки сервера
+[server]
+host = "0.0.0.0"
+port = 8080
+# Литеральная строка для сложного пути или regex
+static_path = '/var/www/assets/(.*)'
+
+# Массив объектов (таблиц)
+[[database.replicas]]
+host = "db-replica-1.local"
+priority = 1
+
+[[database.replicas]]
+host = "db-replica-2.local"
+priority = 2</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Секции (Sections)</h3>
+					<blockquote>
+						Имена секций пишутся на отдельных строках и заключаются в квадратные скобки [  ]. Все директивы, идущие после заголовка секции, относятся к ней, пока не начнется следующая секция.
+					</blockquote>
+					<pre><code class="ini"># настройки для сервера
+[project]
+
+# Настройки сервера
+[server]
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Вложенные таблицы (Вложенные секции)</h3>
+					<blockquote>
+						В TOML вложенные таблицы (аналоги вложенных объектов в JSON или словарей в Python) создаются двумя основными способами: через заголовки с точечной нотацией и через ключи с точками. Главная особенность TOML — строгая типизация и запрет на переопределение типов (нельзя превратить число в таблицу).
+					</blockquote>
+					<pre><code class="ini">[server]
+host = "0.0.0.0"
+
+# Создается таблица server.tls
+[server.tls]
+enabled = true
+
+# Создается глубокая вложенность server.tls.validation
+[server.tls.validation]
+check_revocation = true
+
+# Это создает корневую таблицу, в которой есть ключ database.host
+database.host = "localhost"
+database.port = 5432
+
+# Это превращает ключ database в таблицу (если она еще не была определена как строка)
+database.name = "app_db"
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Массивы таблиц</h3>
+					<blockquote>Массивы таблиц - это одна из самых мощных возможностей TOML, позволяющая описывать списки объектов (например, список пользователей, серверов или товаров). Для создания такого массива используются двойные квадратные скобки [[ ]].</blockquote>
+					<pre><code class="toml">[[products]]
+name = "Молоток"
+sku = 738594937
+
+[[products]]
+name = "Гвоздь"
+sku = 284758393
+color = "серый"</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Базовые многострочные строки</h3>
+					<blockquote>Заключаются в три двойные кавычки. Поддерживают экранирование (\n, \t). Если сразу после открывающих кавычек идет перевод строки, он удаляется (это называется "trimmed").</blockquote>
+					<pre><code class="toml">text = """
+Это первая строка.
+Это вторая строка с табуляцией: 	конец.
+"""</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Литеральные многострочные строки</h2>
+					<blockquote>Заключаются в три одинарные кавычки. Экранирование полностью отключено. Это идеальный выбор для путей в Windows, регулярных выражений или вставки фрагментов кода..</blockquote>
+					<pre><code class="toml">regex = '''I [dw]on't need \d{2} apples'''
+win_path = '''C:\Users\Admin\Documents'''</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Обратный слэш для переноса строки</h3>
+					<blockquote>Заключаются в три одинарные кавычки. Экранирование полностью отключено. Это идеальный выбор для путей в Windows, регулярных выражений или вставки фрагментов кода..</blockquote>
+					<pre><code class="toml">long_string = "The quick brown \
+fox jumps over \
+the lazy dog."</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Директивы (Key-Value pairs)</h3>
+					<blockquote>
+						Это пары «ключ = значение». Знак равенства является разделителем. В классическом INI пробелы вокруг знака = обычно игнорируются, но для читаемости их принято ставить.
+					</blockquote>
+					<pre><code class="toml">host = "127.0.0.1"
+port = 8080
+# Режим работы: development или production
+environment = "development"
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Комментарии</h3>
+					<blockquote>
+						Символ # комментирует всё, что идет за ним до конца строки.
+					</blockquote>
+					<pre><code class="ini"># ===========================
+# Настройки веб-сервера
+# ===========================
+# Режим работы: development или production
+# environment = "development"
+environment = "production"
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Типизация данных.</h3>
+					<blockquote>
+						Строгая. true — это булево значение, "true" — строка, 123 — число. Формат чувствителен к регистру.
+					</blockquote>
+					<pre><code class="ini">enabled = true # булевое
+model = "true" # текстовое
+name = "Гвоздь" # текстовое
+sku = 284758393 # числовое значение
+price = 15.99 # числовое значение
+date = 1979-05-27T07:32:00Z # Дата в формате ISO 8601
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Преймущества</h3>
+					<ul>
+						<li>Однозначность и строгая типизация (Predictability)</li>
+						<li>Читаемость и минимализм (для плоских структур)</li>
+						<li>Явная иерархия</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Недостатки</h3>
+					<ul>
+						<li>Многословность при глубокой вложенности</li>
+						<li>Отсутствие нативного типа null</li>
+						<li>Отсутствие ссылок и переменных</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<h2>XML</h2>
+				<section>
+					<blockquote>XML — это расширяемый язык разметки, который долгое время был корпоративным стандартом для обмена данными и конфигурации сложных систем (например, Java EE, Spring, .NET). В отличие от INI или TOML, XML является настоящим языком разметки, где данные описываются иерархией тегов.</blockquote>
+					<pre><code class="xml"><?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <server host="127.0.0.1" port="8080">
+        <environment>development</environment>
+    </server>
+    <database>
+        <type>postgresql</type>
+        <host>db.internal.local</host>
+        <port>5432</port>
+        <name>app_db</name>
+        <credentials>
+            <user>app_user</user>
+            <password>secret_password</password>
+        </credentials>
+    </database>
+    <paths>
+        <log_dir>/var/log/myapp</log_dir>
+        <temp_dir>/tmp/myapp</temp_dir>
+    </paths>
+</configuration></code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Теги (Элементы)</h3>
+					<blockquote>Данные заключаются в открывающие <tag> и закрывающие </tag> теги. Всё, что находится между ними, — это содержимое элемента (текст или другие вложенные теги).</blockquote>
+					<pre><code class="xml"><host>db.internal.local</host></code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Атрибуты</h3>
+					<blockquote>Дополнительная информация о элементе, записываемая внутри открывающего тега в виде имя="значение".</blockquote>
+					<pre><code class="xml"><server host="127.0.0.1" port="8080">db.internal.local</server></code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Иерархия (Вложенность)</h3>
+					<blockquote>Иерархия (Вложенность) Главная особенность XML — возможность создавать бесконечно глубокие древовидные структуры.</blockquote>
+					<pre><code class="xml"><database>
+    <credentials>
+        <user>...</user>
+    </credentials>
+</database></code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Комментарии</h3>
+					<blockquote>Используются теги <!-- и -->. Они могут быть многострочными.</blockquote>
+					<pre><code class="xml"><!-- Настройки веб-сервера -->
+<server>...</server></code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Инструкции обработки</h3>
+					<blockquote>Файл часто начинается с декларации версии и кодировки: <?xml version="1.0"?>. Используется для совместимости.</blockquote>
+					<pre><code class="xml"><?xml version="1.0" encoding="UTF-8"?></code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Преимущества</h2>
+					<ul>
+						<li>Строгая иерархия и расширяемость</li>
+						<li>Надежная валидация</li>
+						<li>Возможна строгая типизация</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h2>Недостатки</h2>
+					<ul>
+						<li>Избыточность (Многословность)</li>
+						<li>Отсутствие комментариев в значениях</li>
+					</ul>
+				</section>
+			</section>
+            <section>
+				<h2>YAML</h2>
+				<section>
+					<blockquote>YAML (YAML Ain't Markup Language) — это современный формат сериализации данных, который стал стандартом де-факто для конфигураций в мире DevOps, CI/CD и облачных технологий (Kubernetes, Docker Compose, Ansible, GitHub Actions).</blockquote>
+				</section>
+				<section>
+					<pre><code class="yaml"># ===========================
+# Метаданные приложения
+# ===========================
+app:
+  name: "My Awesome Service"
+  version: "2.1.0"
+  # Используем многострочную строку для описания
+  description: |
+    Это подробное описание сервиса.
+    Оно может занимать несколько строк.
+    Все переносы строк будут сохранены.
+
+# Простой список строк
+features:
+  - "Authentication"
+  - "Metrics"
+  - "Tracing"
+# Массив таблиц (список объектов) - аналог JSON-массива объектов
+servers:
+  - name: "web-01"
+    ip: "10.0.0.10"
+    role: "frontend"
+    
+  - name: "web-02"
+    ip: "10.0.0.11"
+    role: "frontend"
+
+# Определяем общие настройки логирования с помощью якоря (&)
+logging: &default_logging
+  level: "INFO"
+  format: "json"
+  file: "/var/log/app/app.log"
+
+# Используем якорь в секции production и добавляем новое поле
+production:
+  <<: *default_logging  # Вливаем всё из default_logging
+  level: "ERROR"        # Переопределяем только уровень
+  # Поле 'format' и 'file' возьмутся из якоря
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Отступы (Иерархия)</h2>
+					<blockquote>Вложенность определяется исключительно отступами (пробелами). Использование табуляции (Tab) официально запрещено спецификацией YAML 1.2 — это самая частая причина ошибок.</blockquote>
+					<pre><code class="yaml">server: # Уровень 0
+  host: localhost  # Уровень 1
+  database:        # Уровень 1
+    name: app_db   # Уровень 2
+    port: 5432     # Уровень 2</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Комментарии</h2>
+					<blockquote>Символ # комментирует всё, что идет за ним до конца строки.</blockquote>
+					<pre><code class="yaml"># =========================== # Метаданные приложения # ===========================
+app: name: "My Awesome Service"
+version: "2.1.0" # Используем многострочную строку для описания
+# debug: true # закомментировано (не используется)</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Типы данных (Неявная типизация)</h2>
+					<blockquote>Парсер сам угадывает тип данных.</blockquote>
+					<pre><code class="yaml">server:
+  version: 1.10 # Число с плавающей точкой
+  version: "1.10" # Строка
+  port: 8080 # Число
+  enable: true # Булево значение
+  host: localhost  # Строка
+  name: "true"   # Строка
+  port: 5432     # Число</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Структуры</h2>
+					<blockquote>Поддерживаются словари (множество ключ- значение, в том числе вложенные словари) и списки (множество значений). Списки (Sequences): начинаются с дефиса -.</blockquote>
+					<pre><code class="yaml">server: # словарь (таблица)
+  host: localhost
+  port: 5432
+  credentials: # вложенный словарь (подтаблица)
+    user: "app_user"
+	password: ${DB_PASSWORD}
+# Простой список строк 
+features:
+  - "Authentication"
+  - "Metrics"
+  - "Tracing"
+# Массив таблиц (список объектов)
+servers:
+  - name: "web-01"
+    ip: "10.0.0.10"
+    role: "frontend"
+  - name: "web-02"
+    ip: "10.0.0.11"
+    role: "frontend"
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Литеральные многострочные строки</h2>
+					<blockquote>Многострочные строки задаются с помощью "пайпа" |. Также для удобства можно многострочно написать одну строку используя > (меняет переносы строк на пробелы)</blockquote>
+					<pre><code class="yaml">description: | 
+  Это подробное описание сервиса.
+  Оно может занимать несколько строк.
+  Все переносы строк будут сохранены.
+
+# Это подробное описание сервиса.
+# Оно может занимать несколько строк.
+# Все переносы строк будут сохранены.
+description_string: >
+  Это описание сервиса.
+  Оно может занимать несколько строк,
+  но все переносы строк будут заменены на пробелы.
+
+# Это описание сервиса. Оно может занимать несколько строк, но все переносы строк будут заменены на пробелы.</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Якоря (Anchors) и Псевдонимы (Aliases)</h2>
+					<blockquote>Уникальная возможность для переиспользования блоков конфигурации.</blockquote>
+					<pre><code class="yaml">defaults: &base # Определяем общие настройки логирования с помощью якоря (&)
+  timeout: 30
+  retries: 3
+  debug: true
+
+production:
+  <<: *base  # Используем якорь в секции production и добавляем новое поле
+  host: prod.server
+  debug: false # Переопределяем поле debug
+
+staging: *base # Используем тот же якорь для staging без изменений
+
+# Результат:
+# prod:
+#   timeout: 30
+#   retries: 3
+#   host: prod.server
+#   debug: false
+# staging:
+#   timeout: 30
+#   retries: 3
+#   debug: true
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>Преимущества</h2>
+					<ul>
+						<li>Максимальная читаемость</li>
+						<li>Выразительность</li>
+						<li>Выразительность: Поддержка сложных структур, ссылок (якорей) и мультидокументов (несколько --- в одном файле).</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h2>Недостатки</h2>
+					<ul>
+						<li>Хрупкость (Проблема пробелов)</li>
+						<li>Отсутствие строгой типизации</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<h2>JSON</h2>
+				<section>
+					<blockquote>JSON (JavaScript Object Notation) — это легковесный текстовый формат обмена данными, основанный на подмножестве языка программирования JavaScript. Несмотря на название, он полностью независим от языка и является стандартом де-факто для API, конфигураций и хранения данных.</blockquote>
+				</section>
+				<section>
+					<pre><code class="yaml">{
+  "app": {
+    "name": "My Awesome Service",
+    "version": "2.1.0",
+    "debug": false
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080
+  },
+  "database": {
+    "type": "postgresql",
+    "host": "db.internal.local",
+    "port": 5432,
+    "name": "app_db",
+    "credentials": {
+      "user": "app_user",
+      "password": "secret_password"
+    }
+  },
+  "features": [
+    "Authentication",
+    "Metrics",
+    "Tracing"
+  ],
+  "threshold": null
+}</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Объекты (Objects)</h3>
+					<blockquote>Объект — это неупорядоченный набор пар «ключ: значение», заключенный в фигурные скобки {}. Ключ всегда должен быть строкой в двойных кавычках.</blockquote>
+					<pre><code class="json">{
+  "host": "localhost",
+  "port": 8080,
+  "enabled": true
+}</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Массивы (Arrays)</h3>
+					<blockquote>Массив — это упорядоченный список значений, заключенный в квадратные скобки []. Значения могут быть любого типа, включая вложенные объекты.</blockquote>
+					<pre><code class="json">{
+  "servers": [
+    { "name": "web-01", "ip": "10.0.0.1" },
+    { "name": "web-02", "ip": "10.0.0.2" }
+  ]
+}</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Типизация данных</h3>
+					<blockquote>JSON поддерживает ограниченный набор типов: строка (в двойных кавычках), число, объект, массив, boolean (true/false) и null.</blockquote>
+					<pre><code class="json">{
+  "string": "text",
+  "number": 42,
+  "float": 3.14,
+  "boolean": true,
+  "nothing": null
+}</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Преймущества</h3>
+					<ul>
+						<li>Универсальность</li>
+						<li>Скорость</li>
+						<li>Стандарт API</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Недостатки</h3>
+					<ul>
+						<li>Нет комментариев</li>
+						<li>Нет дат</li>
+						<li>Шумность</li>
+						<li>Отсутствие якорей</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<h2>Иные стандарты.</h2>
+				<section>
+					<br>
+					<h2>NGINX</h2>
+					<pre><code class="nginx">user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    # Логирование
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent"';
+
+    # Глобальные настройки
+    sendfile        on;
+    keepalive_timeout  65;
+
+    # Виртуальный хост
+    server {
+        listen       80;
+        server_name  example.com www.example.com;
+        root         /var/www/html;
+        index        index.html index.htm;
+
+        # Настройка отдачи статики
+        location / {
+            try_files $uri $uri/ =404;
+        }
+
+        # Настройка проксирования (backend)
+        location /api/ {
+            proxy_pass http://127.0.0.1:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Python</h3>
+					<pre><code class="python">"""
+config/settings/production.py
+Конфигурация для боевого сервера (Production)
+"""
+
+import os
+from decouple import config  # Библиотека для чтения env-файлов
+from .base import *          # Импорт общих настроек из base.py
+
+# ===========================
+# БЕЗОПАСНОСТЬ
+# ===========================
+
+# Режим отладки должен быть строго выключен
+DEBUG = False
+
+# Список разрешенных доменов. Читаем из переменной окружения как строку и превращаем в список
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
+
+# Секретный ключ для шифрования сессий
+SECRET_KEY = config('DJANGO_SECRET_KEY')
+
+# ===========================
+# БАЗА ДАННЫХ
+# ===========================
+# Вместо жестко прописанных данных используем переменные окружения
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('POSTGRES_DB'),
+        'USER': config('POSTGRES_USER'),
+        'PASSWORD': config('POSTGRES_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT', cast=int, default=5432),
+    }
+}
+</code></pre>
+				</section>
+				<section>
+					<br>
+					<h2>SSHD</h2>
+					<pre><code class="sshd"># ===========================
+# Сетевые настройки
+# ===========================
+# Используем только протокол SSH2
+Protocol 2
+
+# Меняем стандартный порт для защиты от брутфорса (опционально)
+Port 2222 
+
+# Слушаем на всех интерфейсах (можно ограничить: ListenAddress 192.168.1.1)
+ListenAddress 0.0.0.0
+
+# ===========================
+# Аутентификация
+# ===========================
+# Запрещаем вход под root (кроме случаев с ключами)
+PermitRootLogin prohibit-password
+
+# Разрешаем только аутентификацию по публичным ключам
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+# СТРОГО: Запрещаем вход по паролю (обязательно после настройки ключей)
+PasswordAuthentication no
+PermitEmptyPasswords no
+
+# Отключаем устаревшие механизмы
+ChallengeResponseAuthentication no
+KerberosAuthentication no
+GSSAPIAuthentication no
+
+# ===========================
+# Безопасность сессии
+# ===========================
+# Время на ввод пароля/логина до разрыва соединения
+LoginGraceTime 30
+
+# Максимальное количество попыток ввода пароля
+MaxAuthTries 3
+
+# Максимальное количество одновременных сессий
+MaxSessions 5
+
+# KeepAlive пакеты, чтобы сервер сам проверял, жив ли клиент
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+# ===========================
+# Ограничение доступа
+# ===========================
+# Разрешаем вход только конкретным пользователям
+AllowUsers admin_user developer_user
+
+# Отключаем проброс иксов и TCP-туннели, если они не нужны
+X11Forwarding no
+AllowTcpForwarding no
+GatewayPorts no
+
+# Подсистема SFTP (внутренняя реализация)
+Subsystem sftp /usr/lib/openssh/sftp-server</code></pre>
+				</section>
+			</section>
+            <!-- Содержимое лекции -->
+			<section>
+				<h2>Спасибо за внимание</h2>
+			</section>
+		</div>
+	</div>
+
+	<aside id="presentable-icon" class="revealjs">
+		<a title="Содержание лекции" href="#/0/1">
+			<i class="fa fa-list-ul fa-2x"></i>
+		</a>
+	</aside>
+	<script src="../../js/bundle.min.js"></script>
+	<script src="../../js/qrcode.min.js"></script>
+	<script> 
+		const myLink = "https://kisa47.github.io/admin_lections/";
+		new QRCode(document.getElementById("qr-container"), {
+			text: myLink, width: 256,
+			height: 256,
+			colorDark : "#000000",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H 
+		});
+	</script>
+</body>
+
+</html>
