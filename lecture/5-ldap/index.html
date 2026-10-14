@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8">
+	<title>LDAP</title>
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	<meta name="author" content="">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="../../css/bundle.min.css">
+	<script src="../../js/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+	<!--[if lt IE 9]>
+		<script src="../../js/html5shiv.min.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<section>
+					<h1>LDAP</h1>
+					<h3>Администрирование информационных систем</h3>
+					<p>
+						<small>Сурцов Владимир Владимирович</small>
+					</p>
+					<a href="https://kisa47.github.io/admin_lections/" style="display: inline-block;" id="qr-container"></a>
+				</section>
+				<section>
+					<h2>Содержание лекции</h2>
+					<nav id="presentable-toc" class="table-content"></nav>
+				</section>
+			</section>
+			<section>
+				<h2>Зачем нужны каталоги?</h2>
+				<section>
+					<br>
+					<h3>Проблема децентрализованного хаоса (Эпоха до каталогов)</h3>
+					<blockquote>В классической IT-инфраструктуре без централизованного каталога каждый узел живет своей жизнью.</blockquote>
+					<blockquote>Представьте компанию из 50 человек и 10 серверов (почта, файловое хранилище, оборудование, CRM, ERP, VPN). В классической схеме учетная запись пользователя Ивана Иванова существует в десяти разных местах:</blockquote>
+					<ul>
+						<li>В файле /etc/passwd в ОС.</li>
+						<li>В базе данных почтового сервера (Postfix/Dovecot).</li>
+						<li>В локальных пользователях CRM-системы.</li>
+						<li>В конфигурации VPN-шлюза.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Проблемы этой модели</h3>
+					<blockquote>Администрирование: При приеме на работу системный администратор должен 10 раз создать одного и того же пользователя. При увольнении — 10 раз его удалить. Если администратор забудет удалить Ивана из VPN, уволенный сотрудник сохранит доступ к корпоративной сети извне. Это критическая дыра в безопасности.</blockquote>
+					<blockquote>Пользовательский опыт: У сотрудника 10 разных логинов и 10 разных паролей. Он их путает, записывает на стикерах, приклеенных к монитору.</blockquote>
+					<blockquote>Отсутствие актуальности: Если Иван сменил фамилию и хочет обновить почту, администратор должен вручную изменить поле mail в десяти разных системах. В половине из них он забудет это сделать.</blockquote>
+				</section>
+			</section>
+			<section>
+				<h2>Что такое каталог (Directory)</h2>
+				<section>
+					<blockquote>Каталог — это не замена SQL, это специализированный инструмент для решения конкретной задачи: быстрого поиска и проверки подлинности.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>LDAP</h3>
+					<blockquote>LDAP (Lightweight Directory Access Protocol) — это протокол доступа к каталогу. Сам протокол — это просто набор правил общения. Данные хранятся в специальной базе данных — службе каталогов.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Ключевые отличия от реляционных БД (PostgreSQL, MySQL)</h3>
+					<table style="font-size: 25px;">
+						<thead>
+							<tr>
+								<th>Характеристика</th>
+								<th>Реляционная БД (SQL)</th>
+								<th>Каталог (LDAP)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Основная операция</td>
+								<td>Частая запись, сложные транзакции (перевод денег, оформление заказа).</td>
+								<td>Чтение и поиск (95% операций — чтение, 5% — запись).</td>
+							</tr>
+							<tr>
+								<td>Структура</td>
+								<td>Плоские таблицы со связями (JOIN).</td>
+								<td>Иерархическое дерево (DIT).</td>
+							</tr>
+							<tr>
+								<td>Скорость</td>
+								<td>Зависит от сложности запроса и индексов.</td>
+								<td>Мгновенный поиск по дереву (Read-optimized).</td>
+							</tr>
+							<tr>
+								<td>Транзакции</td>
+								<td>Полная поддержка (ACID).</td>
+								<td>Отсутствует. Нельзя сделать "BEGIN TRANSACTION" для изменения пользователя в почте и VPN одновременно.</td>
+							</tr>
+							<tr>
+								<td>Данные</td>
+								<td>Динамические, часто меняющиеся.</td>
+								<td>Относительно статичные (имена, должности, группы доступа).</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+				<section>
+					<br>
+					<h3>Развитие технологии</h3>
+					<blockquote>В 1980-х годах МСЭ (ITU-T) разработал стандарт X.500. Это была глобальная амбициозная идея: создать единый мировой электронный справочник. X.500 был невероятно мощным, но и невероятно тяжелым. Он работал поверх всего 7-уровневого стека протоколов OSI, требовал огромных вычислительных мощностей и был сложен в настройке.</blockquote>
+					<blockquote>В начале 1990-х годов в Мичиганском университете (США) решили, что для растущего интернета X.500 слишком громоздок. Они «отрезали» лишнее, оставив только самое необходимое для доступа к данным, и адаптировали протокол для работы поверх TCP/IP. Так появился LDAP — Lightweight Directory Access Protocol (облегченный протокол доступа к каталогам). Слово «облегченный» здесь ключевое.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Объекты хранения</h3>
+					<blockquote>Каталог — это «Единая версия правды» (Single Source of Truth) для идентификации.</blockquote>
+					Типичные объекты (записи) в каталоге:
+					<ul>
+						<li>Люди (Person): ФИО, логин (UID), рабочий телефон, мобильный, личный и рабочий email, хеш пароля, должность, отдел.</li>
+						<li>Группы (GroupOfNames, GroupOfUniqueNames): Списки рассылки, группы доступа. Например, группа cn=it-admins. Вместо того чтобы давать права доступа к серверу десяти людям по отдельности, вы даете их этой группе.</li>
+						<li>Устройства (Device, Computer): Принтеры (с их IP-адресами и местоположением), IP-телефоны, компьютеры в домене.</li>
+						<li>Организационные единицы (OrganizationalUnit - OU): Используются для структурирования. Например, ou=Департамент ИТ, ou=Бухгалтерия. Это не просто папки, это точки применения политик безопасности.</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<h2>Архитектура данных</h2>
+				<section>
+					<br>
+					<blockquote>Данные в LDAP — это не таблицы, а иерархическое дерево, которое визуально и логически похоже на файловую систему Linux.</blockquote>
+					<img  src="./img/ldap_tree.png" height="450">
+				</section>
+				<section>
+					<br>
+					<h2>DIT</h2>
+					<blockquote>DIT (Directory Information Tree) — информационное дерево каталога.</blockquote>
+					<ul style="font-size: 25px;">
+						<li>Корень (Root DSE): Это абстрактная вершина дерева. В отличие от файловой системы. В терминах LDAP корень описывается через суффиксы (Suffixes), например, dc=example,dc=com.</li>
+						<li>Ветви (Контейнеры): Организации, отделы, группы. В LDAP они чаще всего представлены объектным классом organizationalUnit (сокращенно ou).</li>
+						<li>Листья (Объекты): Конечные записи — пользователи, узлы.</li>
+					</ul>
+					<blockquote>В LDAP путь (Distinguished Name) пишется наоборот:
+						от конкретного объекта к корню. 
+						Пример: uid=ivanov,ou=it,dc=example,dc=com.
+						Самая уточняющая информация (имя пользователя) — слева,
+						самый общий контекст (домен компании) — справа.
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h2>DN (Distinguished Name) — Уникальное имя</h2>
+					<blockquote>
+						Это полный, абсолютный путь к объекту в дереве. Он уникален во всей базе. По нему LDAP находит конкретную запись.	
+					</blockquote>
+					<blockquote>
+						Структура: RDN_1, RDN_2, ..., RDN_N
+					</blockquote>
+					<blockquote>
+						Пример: uid=iivanov,ou=People,dc=example,dc=com
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h2>RDN (Relative Distinguished Name) — Относительное уникальное имя</h2>
+					<blockquote>
+						Это часть DN, которая уникальна только на своем уровне вложенности (внутри своей «папки»).
+					</blockquote>
+					<blockquote>
+						В примере выше: uid=iivanov — это RDN. Он уникален внутри ou=People. В соседнем отделе ou=Marketing вполне может быть свой uid=iivanov.
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h2>Компоненты именования (Атрибуты RDN)</h2>
+					<blockquote>В отличие от файловых систем, где папки называются просто именами, в LDAP каждая «папка» и «файл» обязаны иметь атрибуты.</blockquote>
+					<ul style="font-size: 30px;">
+						<li>dc (Domain Component): Компонент домена. Используется для построения базы на основе DNS-имен. example.com превращается в dc=example,dc=com. Это стандарт для большинства реализаций.</li>
+						<li>ou (Organizational Unit): Организационное подразделение. Это ваши «папки» для группировки: ou=People (люди), ou=Groups (группы), ou=Servers, ou=IoT_Devices.</li>
+						<li>cn (Common Name): Общее имя. Обычно это ФИО человека или название группы: cn=Иван Иванов, cn=Domain Admins.</li>
+						<li>uid (User ID): Уникальный идентификатор пользователя. Логин. Именно его чаще всего используют в качестве RDN для записей людей, так как фамилия (cn) может повторяться, а логин — нет.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h2>Визуализация дерева</h2>
+					<pre><code class="tree">
+dc=example,dc=com (Корень)
+├── ou=People (Ветка)
+│   ├── uid=jsmith (Лист 1) -> RDN: uid=jsmith
+│   └── uid=kpetrov (Лист 2) -> RDN: uid=kpetrov
+└── ou=Groups (Ветка)
+    ├── cn=it-admins (Лист 3)
+    └── cn=all-company (Лист 4)
+					</code></pre>
+				</section>
+			</section>
+			<section>
+				<h2>Схема данных</h2>
+				<section>
+					<br>
+					<blockquote>
+						В SQL структуру таблицы вы создаете командой CREATE TABLE. В LDAP структура определяется схемой (Schema) и объектными классами.
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Атрибуты (Attributes)</h3>
+					<blockquote>
+					Это поля данных. У каждого атрибута есть строгие правила:
+					</blockquote>
+					<ul>
+						<li>Синтаксис: Может ли там быть текст, число, бинарный хеш пароля или дата.</li>
+						<li>Правила сравнения: Должен ли поиск по этому полю быть регистрозависимым? (Например, поиск по логину uid обычно регистрозависим, а по фамилии sn — нет).</li>
+						<li>Множественность: Может ли у пользователя быть два телефона (да) или два логина (нет)?</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Объектные классы (ObjectClasses)</h3>
+					<blockquote>
+						Это шаблоны, которые говорят: «Если запись хочет быть пользователем, она ОБЯЗАНА иметь (MUST) такие-то атрибуты и МОЖЕТ иметь (MAY) такие-то».
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h2>Ключевая концепция — Наследование</h2>
+					<blockquote>Классы в LDAP работают как классы в объектно-ориентированном программировании. Иерархия класса inetOrgPerson (современный стандарт для пользователя):</blockquote>
+					<blockquote>inetOrgPerson -> organizationalPerson -> person -> top</blockquote>
+					<ul>
+						<li>top: Абстрактный вершина всего. Любой объект в LDAP обязан иметь класс top. Он требует наличия атрибута objectClass.</li>
+						<li>person: Добавляет обязательный атрибут sn (фамилия) и опциональный cn.</li>
+						<li>organizationalPerson: Добавляет должность, адрес, телефон.</li>
+						<li>inetOrgPerson: Добавляет логин (uid), почту (mail), хеш пароля (userPassword).</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h2>Наследование. Практическая польза</h2>
+					<blockquote>
+						Когда вы создаете запись для Ивана Иванова, вам не нужно перечислять все классы. Вы просто пишете в LDIF-файле: objectClass: inetOrgPerson. LDAP-сервер автоматически понимает, что этой записи теперь доступны и обязательны атрибуты из person, organizationalPerson и самого inetOrgPerson.
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h2>Типы объектных классов</h2>
+					<blockquote>В LDAP три типа классов:</blockquote>
+					<ul>
+						<li>STRUCTURAL (Структурный): Обязательно должен быть один и только один на запись. Он определяет природу объекта (это inetOrgPerson? Это groupOfNames?). Он формирует «позвоночник» записи.</li>
+						<li>AUXILIARY (Вспомогательный): Можно добавить сколько угодно для расширения функционала. Например, класс shadowAccount можно добавить к пользователю, чтобы управлять сроком действия пароля (привязать LDAP к механизму /etc/shadow в Linux).</li>
+						<li>ABSTRACT (Абстрактный): Только для наследования. Нельзя назначить запись абстрактным классом. Пример — уже упомянутый top.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h2>Пример</h2>
+					<ul>
+						<li>DN (где он лежит): cn=server1,ou=Accounting,dc=example,dc=com.</li>
+						<li>Его структурный класс (что это такое): server.</li>
+						<li>Его вспомогательный класс (какие у него особенности): ieee802Device (чтобы привязать MAC-адрес).</li>
+						<li>Его атрибуты (его параметры): description: "Сервер для сервисов", macAddress: "00:11:22:33:44:55"».</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h2>Основы протокола</h2>
+					<section>
+						<br>
+						<h3>Модель клиент-сервер</h3>
+						<blockquote>Модель клиент-сервер: Клиент (приложение, ОС, скрипт) подключается к серверу (OpenLDAP, Active Directory).</blockquote>
+					</section>
+					<section>
+						<br>
+						<h3>Порты и транспорт</h3>
+						<ul>
+							<li>389/TCP — стандартный LDAP (незащищенный).</li>
+							<li>636/TCP — LDAPS (LDAP over SSL/TLS, устаревающий подход).</li>
+							<li>389/TCP + StartTLS — современный стандарт: соединение начинается открыто, затем команда StartTLS переводит его в защищенный режим.</li>
+						</ul>
+					</section>
+					<section>
+						<br>
+						<h3>Жизненный цикл сессии</h3>
+						<ul>
+							<li>Bind (Привязка): Аутентификация. Может быть анонимной (чтение публичного справочника) или с учетными данными (DN и пароль).</li>
+							<li>Operation: Поиск (Search), добавление (Add), изменение (Modify), удаление (Delete).</li>
+							<li>Unbind: Завершение сессии.</li>
+							<li>Поиск (Search): Самая частая операция. Параметры: Base DN (где искать), Scope (глубина: Base, OneLevel, Subtree), Filter (фильтр, например (uid=ivanov)), Attributes (какие поля вернуть).</li>
+						</ul>
+					</section>
+				</section>
+			</section>
+			<section>
+				<h2>Где используется LDAP</h2>
+				<ul>
+					<li>Linux-аутентификация: sssd (System Security Services Daemon) или nslcd. Как заставить Linux-сервер пускать пользователей по паролям из LDAP/AD.</li>
+					<li>Веб-приложения: Nextcloud, GitLab, Zabbix, Grafana. Настройка внешнего провайдера аутентификации (Auth Proxy).</li>
+					<li>Сетевое оборудование: Аутентификация администраторов на коммутаторах и маршрутизаторах (Cisco, Juniper) через RADIUS, который в свою очередь обращается к LDAP.</li>
+				</ul>
+			</section>
+			<section>
+				<h2>Спасибо за внимание</h2>
+			</section>
+		</div>
+	</div>
+
+	<aside id="presentable-icon" class="revealjs">
+		<a title="Содержание лекции" href="#/0/1">
+			<i class="fa fa-list-ul fa-2x"></i>
+		</a>
+	</aside>
+	<script src="../../js/bundle.min.js"></script>
+	<script src="../../js/qrcode.min.js"></script>
+	<script> 
+		const myLink = "https://kisa47.github.io/admin_lections/";
+		new QRCode(document.getElementById("qr-container"), {
+			text: myLink, width: 256,
+			height: 256,
+			colorDark : "#000000",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H 
+		});
+	</script>
+</body>
+
+</html>
