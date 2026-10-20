@@ -9,3 +9,4 @@
 - [Аппаратное обеспечение функционирование сетей 3](./lecture/3-hardware-network-3/index.html)
 - [Языки разметки и задание конфигураций](./lecture/4-software-langs/index.html)
 - [LDAP](./lecture/5-ldap/index.html)
+- [HTTP](./lecture/6-http/index.html)

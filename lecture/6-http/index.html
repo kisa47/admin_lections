@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8">
+	<title>HTTP</title>
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	<meta name="author" content="">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="../../css/bundle.min.css">
+	<script src="../../js/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+	<!--[if lt IE 9]>
+		<script src="../../js/html5shiv.min.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<section>
+					<h1>HTTP</h1>
+					<h3>Администрирование информационных систем</h3>
+					<p>
+						<small>Сурцов Владимир Владимирович</small>
+					</p>
+					<a href="https://kisa47.github.io/admin_lections/" style="display: inline-block;" id="qr-container"></a>
+				</section>
+				<section>
+					<h2>Содержание лекции</h2>
+					<nav id="presentable-toc" class="table-content"></nav>
+				</section>
+			</section>
+			<section>
+				<h2>HTTP</h3>
+				<section>
+					<br>
+					<blockquote>HTTP – это протокол прикладного уровня, работающий поверх TCP. Сам протокол stateless. Каждый запрос независим, предыдущий забывается сразу после отправки ответа.</blockquote>
+					<img src="./img/http.png" height="200">
+				</section>
+				<section>
+					<br>
+					<h3>Запрос</h3>
+					<img src="./img/request.png">
+				</section>
+				<section>
+					<br>
+					<h3>Строка запроса (Request Line)</h3>
+					<blockquote>HTTP-метод</blockquote>
+					<img src="./img/method.png" height="70">
+					<blockquote>Адрес запрашиваемого ресурса (request-target)</blockquote>
+					<img src="./img/target.png" height="70">
+					<blockquote>Версия протокола HTTP</blockquote>
+					<img src="./img/version.png" height="70">
+				</section>
+				<section>
+					<br>
+					<h3>Методы HTTP запроса</h3>
+					<ul>
+						<li>GET запрашивает представление ресурса. Запросы с использованием этого метода могут только извлекать данные.</li>
+						<li>HEAD запрашивает ресурс так же, как и метод GET, но без тела ответа.</li>
+						<li>POST используется для отправки сущностей к определённому ресурсу.</li>
+						<li>PUT заменяет все текущие представления ресурса данными запроса.</li>
+						<li>PATCH используется для частичного изменения ресурса.</li>
+						<li>DELETE удаляет указанный ресурс.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Методы HTTP запроса</h3>
+					<ul>
+						<li>CONNECT устанавливает "туннель" к серверу, определённому по ресурсу.</li>
+						<li>OPTIONS используется для описания параметров соединения с ресурсом.</li>
+						<li>TRACE выполняет вызов возвращаемого тестового сообщения с ресурса.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Методы HTTP запроса</h3>
+					<img src="./img/methods.png">
+				</section>
+				<section>
+					<br>
+					<h3>Адрес запрашиваемого ресурса. URL</h3>
+					<blockquote>URL (Uniform Resource Locator — «унифицированный указатель ресурса») — это структурированная строка символов, которая идентифицирует ресурс в сети и служит его уникальным адресом.</blockquote>
+					<img src="./img/url.png">
+					<ul>
+						<li>Схема – она же протокол.</li>
+						<li>Хост – доменное имя или IP адрес.</li>
+						<li>Порт – если явно указан. Для HTTP по умолчанию 80, для HTTPS – 443.</li>
+						<li>Путь – уже конкретное место на сервере.</li>
+						<li>Query – необязательная часть после вопросительного знака.</li>
+						<li>Фрагмент – то, что после #. Указывает на конкретный раздел внутри страницы. На сервер не уходит, браузер сам с ним разбирается.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Абсолютные и относительные URL</h3>
+					<img src="./img/url1.png">
+					<img src="./img/url2.png">
+					<img src="./img/url3.png">
+					<img src="./img/url4.png">
+					<img src="./img/url5.png">
+				</section>
+				<section>
+					<br>
+					<h3>Версия протокола HTTP/0.9</h3>
+					<blockquote>HTTP/0.9 (1991) — Самый первый вариант, созданный Тимом Бернерсом-Ли. Запрос выглядел просто как GET /index.html. Сервер возвращал только тело HTML-файла. Никаких заголовков, ошибок или картинок передавать было нельзя.</blockquote>
+					<img src="./img/http0.9.png">
+				</section>
+				<section>
+					<br>
+					<h3>Версия протокола HTTP/1.0</h3>
+					<blockquote>HTTP/1.0 (1996) — Появление метаданных В RFC 1945 была добавлена структура: стартовая строка, заголовки и тело. Появился метод POST для отправки форм. Однако протокол был неэффективен: для загрузки страницы с 50 картинками браузеру приходилось создавать 50 новых TCP-соединений, каждое из которых долго «разгонялось» (медленный старт TCP).</blockquote>
+					<img src="./img/http1.0.png">
+				</section>
+				<section>
+					<br>
+					<h3>Версия протокола HTTP/1.1</h3>
+					<blockquote>HTTP/1.1 (1997) — Главное нововведение — Keep-Alive. Соединение перестало закрываться после ответа, позволяя скачивать CSS, JS и картинки друг за другом по одному каналу. Появился обязательный заголовок Host, что позволило размещать тысячи разных сайтов на одном IP-адресе (виртуальный хостинг). Также добавили новые методы: PUT, DELETE, OPTIONS, TRACE, CONNECT, PATCH.</blockquote>
+					<img src="./img/http1.1.png">
+				</section>
+				<section>
+					<br>
+					<h3>Версия протокола HTTP/2</h3>
+					<blockquote>HTTP/2 (2015) — Разработан на базе протокола Google SPDY. Вместо читаемого текста используются компактные бинарные фреймы. Мультиплексирование десятков запросов и ответов передаются параллельно в рамках одного TCP-соединения.</blockquote>
+					<img src="./img/http2.png">
+				</section>
+				<section>
+					<br>
+					<h3>Версия протокола HTTP/3</h3>
+					<blockquote>HTTP/3 (2022) — Не просто обновляет протокол, он меняет транспортный уровень. Вместо TCP используется QUIC, работающий поверх UDP.</blockquote>
+					<img src="./img/http2.png">
+				</section>
+				<section>
+					<br>
+					<h3>Использование версий протокола HTTP</h3>
+					<ul>
+						<li>HTTP/1.1 остается самым массовым по количеству поддерживаемых серверов.</li>
+						<li>HTTP/2 включен по умолчанию на большинстве крупных сайтов.</li>
+						<li>HTTP/3 активно внедряется. Его поддержка есть во всех современных браузерах.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Заголовки в HTTP-запросах</h3>
+					<blockquote>HTTP-заголовки (headers) — это служебные строки в формате «Ключ: Значение», которые передают метаданные о запросе или ответе. Они позволяют клиенту и серверу договориться о формате данных, способе передачи, безопасности и кэшировании.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Заголовки в HTTP-запросах</h3>
+					<blockquote>Заголовки запроса. Это те, что клиент шлёт серверу, чтобы рассказать о себе или уточнить, что именно ему нужно. Например, User-Agent (кто я такой), Accept (какие форматы данных я понимаю), Authorization (вот мой токен, пустите). Без них серверу пришлось бы гадать.</blockquote>
+					<blockquote>Заголовки ответа. Тут сервер отвечает взаимностью: рассказывает про себя или добавляет служебную информацию. Классика – Server (апач, нджинкс или что-то самописное), Location (редирект, ищи там), Retry-After (приходи позже). Иногда без них никак, например, при авторизации нужно отдать WWW-Authenticate.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Заголовки в HTTP-запросах</h3>
+					<blockquote>Заголовки представления (Representation headers). Они описывают, что именно лежит в теле сообщения. Самый известный – Content-Type (это JSON, картинка или HTML), плюс Content-Language, Content-Encoding (сжато gzip или нет). Если перепутать, клиент попытается распарсить HTML как JSON и упадёт с ошибкой.</blockquote>
+					<blockquote>Заголовки управления передачей (Message Framing). Они нужны, чтобы понять, где заканчивается тело запроса/ответа и начинается следующее сообщение. Главные тут Content-Length (сколько байт читать) и Transfer-Encoding: chunked (данные идут кусками, смотри на размер каждого чанка). Если сервер ошибётся с длиной, клиент либо откусит лишнего, либо зависнет в ожидании.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Заголовки в HTTP-запросах</h3>
+					Группы заголовков в HTTP/1.1 запросе.
+					<img src="./img/request_headers.png">
+				</section>
+				<section>
+					<br>
+					<h3>Заголовки в HTTP-запросах</h3>
+					Группы заголовков в HTTP/1.1 ответе.
+					<img src="./img/response_headers.png">
+				</section>
+				<section>
+					<br>
+					<h3>Заголовки в HTTP-запросах</h3>
+					<img src="./img/headers.png">
+				</section>
+				<section>
+					<br>
+					<h3>Тело запроса</h3>
+					<blockquote>Тело запроса – это данные, которые клиент отправляет на сервер. В HTTP оно идёт после заголовков, и между ними обязательно должна быть пустая строка. Без этой пустой строки сервер не поймёт, где заканчивается служебная информация и начинаются сами данные.</blockquote>
+					<blockquote>Не все запросы имеют тело. GET и HEAD, например, обычно не имеют тела – большинство серверов его игнорируют. А вот POST, PUT и PATCH без тела почти не бывает, потому что через них как раз и отправляют то, что меняет состояние на сервере: формы, JSON, файлы. DELETE в теории тоже может что-то передавать в теле, но на практике так почти никто не делает, и многие серверы просто игнорируют тело в DELETE.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Тело запроса</h3>
+					<blockquote>Что именно лежит в теле, определяют заголовки. Content-Type говорит, что за тип данных: JSON, XML, картинка или просто текст. Content-Length – сколько байт сервер должен прочитать. Если забыть указать Content-Type, серверу придётся гадать, и обычно это кончается ошибкой 415 Unsupported Media Type.</blockquote>
+					<blockquote>В качестве тела может передаваться что угодно: JSON (сейчас это стандарт для API), XML (на старых проектах), form-data (когда в форме есть файлы), бинарные данные или поток. Главное, чтобы и клиент, и сервер понимали, с чем имеют дело.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Тело запроса</h3>
+					<img src="./img/request_body.png" height="500px">
+				</section>
+				<section>
+					<br>
+					<h3>HTTP-ответ</h3>
+					<blockquote>Когда сервер разобрался с запросом, он собирает ответ. Структура примерно та же, что и у запроса: сначала статусная строка (для HTTP/1.1), потом заголовки, потом пустая строка и, если нужно, тело.</blockquote>
+					<blockquote>В статусной строке три части: версия протокола, трёхзначный код и текстовое пояснение к нему. Код – это самое главное. Пояснение вроде OK, Not Found или Internal Server Error уже опционально, браузеры на него не особо смотрят.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>HTTP-ответ</h3>
+					<blockquote>Код состояния ответа HTTP показывает, был ли успешно выполнен определённый HTTP запрос.</blockquote>
+					Ответы сгруппированы в 5 классов:
+					<ul>
+						<li>Информационные ответы (1XX)</li>
+						<li>Успешные ответы (2XX)</li>
+						<li>Сообщения о перенаправлении (3XX)</li>
+						<li>Ошибки клиента (4XX)</li>
+						<li>Ошибки сервера (5XX)</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Информационные (1xx)</h3>
+					<ul>
+						<li>100 Continue – сервер говорит: «давай, шли данные дальше, я готов». Бывает, когда клиент сначала отправляет заголовки и ждёт подтверждения, прежде чем пихать большое тело.</li>
+						<li>101 Switching Protocols – сервер соглашается переключиться на другой протокол, как просили в заголовке Upgrade. Например, при переходе на WebSocket.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Успешные (2xx)</h3>
+					<ul>
+						<li>200 OK – классика. Запрос выполнен, данные в теле, если они предполагались.</li>
+						<li>201 Created – приходит на POST или PUT, когда на сервере что-то создали. Часто в ответе ещё отдают Location, где этот новый ресурс лежит.</li>
+						<li>204 No Content – сервер всё сделал, но тело пустое. Например, удалили запись и возвращать нечего.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Перенаправления (3xx)</h3>
+					<ul>
+						<li>301 Moved Permanently – ресурс навсегда переехал. Старый адрес больше не работает, используйте новый из Location.</li>
+						<li>302 Found – временный переезд. Сейчас иди туда, но потом ресурс снова будет здесь.</li>
+						<li>304 Not Modified – приходит на GET с заголовками If-Modified-Since или If-None-Match, если ресурс не менялся. Тела нет, браузер берёт данные из кэша.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Ошибки клиента (4xx)</h3>
+					<ul>
+						<li>400 Bad Request – сервер не понял, что от него хотят. Синтаксическая ошибка, битые заголовки или кривое тело.</li>
+						<li>401 Unauthorized – нужна аутентификация. Обычно в ответе висит WWW-Authenticate с подсказкой, как именно авторизоваться.</li>
+						<li>403 Forbidden – сервер вас узнал, но доступ не даёт.</li>
+						<li>404 Not Found – нет такого ресурса. Самый популярный код.</li>
+						<li>429 Too Many Requests – забанили за частоту. Клиент слишком часто стучится, приходите позже.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Ошибки сервера (5xx)</h3>
+					<ul>
+						<ul>500 Internal Server Error – всё упало, но непонятно почему. Самая частая серверная ошибка.</ul>
+						<ul>502 Bad Gateway – сервер (обычно прокси или шлюз) сходил наверх, а оттуда пришёл неправильный ответ.</ul>
+						<ul>503 Service Unavailable – сервер временно не тянет нагрузку или лежит на обслуживании.</ul>
+						<ul>504 Gateway Timeout – прокси ждал ответ от вышестоящего сервера, но не дождался.</ul>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>HTTPS</h3>
+					<blockquote>HTTPS не является самостоятельным протоколом. Это результат работы протокола прикладного уровня HTTP поверх протокола защиты транспортного уровня TLS (Transport Layer Security).</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>HTTPS</h3>
+					<blockquote>HTTPS шифрует весь трафик целиком, а не только пароли.</blockquote>
+					<ul>
+						<li>URL-адреса и пути</li>
+						<li>Заголовки (Headers)</li>
+						<li>Тело запроса (Body)</li>
+						<li>Тело ответа</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Процесс установления соединения (TLS Handshake в TLS 1.2/1.3)</h3>
+					<ul>
+						<li>Client Hello: Клиент отправляет список поддерживаемых версий, наборов шифров (Cipher Suites) и расширение SNI (Server Name Indication).</li>
+						<li>Server Hello: Сервер выбирает Cipher Suite и отправляет свой сертификат с открытым ключем (X.509).</li>
+						<li>Key Exchange: Обмен параметрами для генерации ключей (в TLS 1.3 это происходит максимально быстро, объединяясь с обменом сертификатами).</li>
+						<li>Finished: Стороны обмениваются проверочными сообщениями, шифруя их новым сессионным ключом (симметричное шифрование). Если проверка прошла — канал считается установленным.</li>
+					</ul>
+				</section>
+			</section>
+			<section>
+				<h2 class="header-hide">Спасибо за внимание</h2>
+			</section>
+		</div>
+	</div>
+
+	<aside id="presentable-icon" class="revealjs">
+		<a title="Содержание лекции" href="#/0/1">
+			<i class="fa fa-list-ul fa-2x"></i>
+		</a>
+	</aside>
+	<script src="../../js/bundle.min.js"></script>
+	<script src="../../js/qrcode.min.js"></script>
+	<script> 
+		const myLink = "https://kisa47.github.io/admin_lections/";
+		new QRCode(document.getElementById("qr-container"), {
+			text: myLink, width: 256,
+			height: 256,
+			colorDark : "#000000",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H 
+		});
+	</script>
+</body>
+
+</html>
