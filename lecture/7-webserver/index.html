@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+	<meta charset="utf-8">
+	<title>Web-серверы</title>
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	<meta name="author" content="">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="../../css/bundle.min.css">
+	<script src="../../js/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+	<!--[if lt IE 9]>
+		<script src="../../js/html5shiv.min.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<section>
+					<h1>Web-серверы</h1>
+					<h3>Администрирование информационных систем</h3>
+					<p>
+						<small>Сурцов Владимир Владимирович</small>
+					</p>
+					<a href="https://kisa47.github.io/admin_lections/" style="display: inline-block;" id="qr-container"></a>
+				</section>
+				<section>
+					<h2>Содержание лекции</h2>
+					<nav id="presentable-toc" class="table-content"></nav>
+				</section>
+			</section>
+			<section>
+				<h2>Web-Серверы</h2>
+					<blockquote>Веб-сервер — это программное обеспечение, работающее на серверной стороне, которое реализует логику протокола HTTP/HTTPS. Его основная задача — принимать сетевые запросы от клиентов и отдавать им контент.</blockquote>
+				С технической точки зрения веб-сервер — это демон (служба), который:
+				<ul>
+					<li>Слушает определенный сетевой порт.</li>
+					<li>Принимает TCP-соединение (для HTTP/3 UDP из-за перехода на QUIC).</li>
+					<li>Парсит HTTP-сообщение (заголовки и тело).</li>
+					<li>Выполняет логику: либо отвечает сам, либо передает запрос другому приложению.</li>
+					<li>Формирует HTTP-ответ и закрывает (или удерживает Keep-Alive) соединение.</li>
+				</ul>
+			</section>
+			<section>
+				<h2>NGINX</h2>
+				<section>
+					<blockquote>
+						nginx ("engine x") — это HTTP-сервер, обратный прокси сервер с поддержкой кеширования и балансировки нагрузки, TCP/UDP прокси-сервер, а также почтовый прокси-сервер.
+					</blockquote>
+					<blockquote>
+						Изначально разработан Игорем Сысоевым и распространяется под лицензией BSD из 2 пунктов.
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Причины появления</h3>
+					<blockquote>
+						В начале 2000-х годов классическая архитектура веб-серверов сталкивалась с проблемой масштабируемости. При обработке 10 000 одновременных соединений (проблема C10k) серверы тратили огромные ресурсы на переключение контекста между процессами.
+					</blockquote>
+					<blockquote>В 2002 году системный администратор компании «Рамблер» Игорь Сысоев начал разработку нового веб-сервера. Главной целью было создание решения, способного эффективно обслуживать десятки тысяч одновременных соединений на одном сервере с минимальным потреблением памяти.</blockquote>
+					<blockquote>В 2004 году осуществлён выпуск первой публичной версии Nginx. Код был открыт, что позволило сообществу начать его доработку.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Архитектура</h3>
+					<blockquote>
+						В отличие от традиционных веб-серверов, которые создают отдельный процесс или поток на каждое входящее соединение (как классический Apache Prefork), Nginx использует асинхронную событийно-ориентированную архитектуру. Это позволяет ему обрабатывать десятки тысяч одновременных соединений на одном ядре CPU с минимальным потреблением памяти.
+					</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Модель Master-Worker</h3>
+					<blockquote>
+						Процесс Nginx в операционной системе Linux представлен не одной сущностью, а группой процессов. Их роли строго разделены на Master и Worker процессы.
+					</blockquote>
+					<pre><code class="bash">
+[root@space-controller-node ~]# systemctl status nginx
+● nginx.service - nginx - high performance web server, ordering & limits patched for SpaceVM
+     Loaded: loaded (/etc/systemd/system/nginx.service; enabled; vendor preset: enabled)
+    Drop-In: /etc/systemd/system/nginx.service.d
+             └─hardening.conf
+     Active: active (running) since Thu 2026-10-15 17:55:34 UTC; 1 weeks 5 days ago
+       Docs: https://nginx.org/en/docs/
+   Main PID: 1774 (nginx)
+      Tasks: 5 (limit: 9472)
+     Memory: 41.2M
+        CPU: 10min 11.271s
+     CGroup: /system.slice/nginx.service
+             ├─1774 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+             ├─1775 nginx: worker process
+             ├─1776 nginx: worker process
+             ├─1777 nginx: worker process
+             └─1778 nginx: worker process
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Master Process (Мастер-процесс)</h3>
+					<blockquote>Это «мозг» и «дирижер» системы. Обычно запускается один раз с правами суперпользователя (root), чтобы иметь возможность занять привилегированные порты (80 для HTTP и 443 для HTTPS).</blockquote>
+					<ul style="font-size: 25px;">
+						<li>Чтение конфигурации: При старте или команде nginx -s reload мастер читает nginx.conf</li>
+						<li>Валидация: Проверяет синтаксис конфига. Если в новом конфиге ошибка, мастер просто не применит его, и старые воркеры продолжат работать. Это обеспечивает Zero Downtime (нулевой простой) при обновлениях.</li>
+						<li>Управление жизненным циклом: Запускает, останавливает и перезапускает Worker-процессы.</li>
+						<li>Сигналы: Реагирует на системные сигналы (например, SIGHUP для перезагрузки конфига, SIGQUIT для плавного завершения).</li>
+						<li>Привилегированные операции: Открывает слушающие сокеты (bind) и затем передает их воркерам.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Worker-процессы (Рабочие)</h3>
+					<blockquote>Это «мускулы» сервера. Именно они выполняют всю работу по сетевому взаимодействию. Запускаются без прав суперпользователя (обычно пользователь www-data или nginx).  Количество задается директивой worker_processes в nginx.conf</blockquote>
+					<pre><code class="nginx">worker_processes auto;</code></pre>
+					<ul>
+						<li>Событийный цикл (Event Loop): Каждый воркер работает в однопоточном цикле событий. Он не ждет данных. Если воркер отправил запрос к диску или базе данных, он не «засыпает», а идет обрабатывать другие готовые соединения.</li>
+						<li>Разделяемая память: Все воркеры используют общие структуры данных (например, кэш сессий или таблицу лимитов) через механизмы разделяемой памяти (shared memory).</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Цикл обработки</h3>
+					<ul>
+						<li>Master читает конфиг, открывает сокет на порту 80 и форкит (создает), например, 4 Worker-процесса.</li>
+						<li>Workers наследуют этот открытый сокет.</li>
+						<li>Клиент отправляет запрос. Ядро ОС уведомляет один из свободных Worker'ов.</li>
+						<li>Worker читает заголовки HTTP. Если нужно прочитать файл с диска, он просит ядро сделать это и переключается на другие активные соединения.</li>
+						<li>Как только файл прочитан, Worker отправляет его клиенту и закрывает соединение (или оставляет открытым для Keep-Alive).</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Почему это эффективно</h3>
+					<ul>
+						<li>Отсутствие блокировок: В Apache (Prefork) 1000 клиентов = 1000 процессов. В Nginx 1000 клиентов = 4 воркера, каждый из которых держит по 250 соединений в неблокирующем режиме.</li>
+						<li>Отказоустойчивость: Если Worker-процесс упадет из-за ошибки (например, в стороннем модуле), Master-процесс мгновенно создаст новый. Остальные воркеры продолжат работу.</li>
+						<li>Reload без простоя: Это «киллер-фича» Nginx. При nginx -s reload Master запускает новую пачку воркеров с новым конфигом. Старые воркеры завершают текущие запросы и закрываются. Пользователи даже не замечают, что конфиг изменился.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Иерархия конфигурационного файла (Контексты)</h3>
+					<blockquote>Конфигурация Nginx строится на строгой иерархии блоков, которые называются контекстами. Понимание этой вложенности критически важно: директивы работают только внутри своего контекста или наследуются в дочерние контексты.</blockquote>
+					<blockquote>Файл конфигурации (обычно /etc/nginx/nginx.conf) — это дерево. Если директива находится в родительском блоке, она доступна во всех дочерних, если в дочернем не указано иное.</blockquote>
+				</section>
+				<section>
+					<br>
+					<h3>Пример конфигурации</h3>
+					<pre><code class="nginx">
+# 1. MAIN CONTEXT
+user www-data;
+worker_processes auto;
+
+events { 
+    # 2. EVENTS CONTEXT
+    worker_connections 4096; 
+}
+
+http {
+    # 3. HTTP CONTEXT
+    include mime.types;
+    sendfile on;
+
+    # 4. SERVER CONTEXT (VHost 1)
+    server {
+        listen 80;
+        server_name site1.com;
+
+        # 5. LOCATION CONTEXT
+        location / {
+            root /var/www/site1;
+        }
+
+        location /api/ {
+            proxy_pass http://backend;
+        }
+    }
+
+    # 4. SERVER CONTEXT (VHost 2)
+    server {
+        listen 80;
+        server_name site2.com;
+        root /var/www/site2;
+    }
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Main (глобальный контекст)</h3>
+					<blockquote>Располагается вне каких либо блоков (корень) и задает параметры всего демона Nginx (в частности Worker`ов). На этом уровне не задаются конфигурации описывающие работу с HTTP как таковую.</blockquote>
+					
+					<pre><code class="nginx">
+# 1. MAIN CONTEXT
+user                 www-data; # от имени какого пользователя работают воркеры
+worker_processes     auto; # количество воркеров (обычно по числу ядер CPU).
+worker_rlimit_nofile 65535; # лимит файловых дескрипторов
+pid                  /run/nginx.pid; # пути к PID-файлу.
+include              /etc/nginx/modules-enabled/*.conf; # вставка конфигурации из других файлов в данное место
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Events</h3>
+					<blockquote>Управляет сетевым вводом-выводом. Как именно Nginx будет принимать соединения.</blockquote>
+					<pre><code class="nginx">
+# 1. MAIN CONTEXT
+worker_processes     auto;
+...    
+events { 
+    # 2. EVENTS CONTEXT
+    worker_connections 4096; # максимальное количество одновременных соединений на один Worker
+    use epoll; # механизм уведомлений для ускорения работы в Linux системах
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>HTTP</h3>
+					<blockquote>Глобальные настройки протокола HTTP. Здесь задаются параметры, общие для всех сайтов на сервере.</blockquote>
+					<pre><code class="nginx">
+# 1. MAIN CONTEXT
+worker_processes     auto;
+...    
+http {
+    # 3. HTTP CONTEXT
+    include                 mime.types; # сопоставление расширений файлов и их типов.
+    sendfile                on; # оптимизации передачи статических файлов напрямую из ядра ОС
+    gzip                    off; # полностью отключает сжатие ответов методом gzip
+    client_max_body_size    2m; # максимально допустимый размер тела HTTP-запроса
+    proxy_connect_timeout   15s; # максимальное время, которое NGINX будет ждать при попытке установить TCP-соединение с проксируемым сервером
+    proxy_send_timeout      10s; # максимальное время ожидания при передаче запроса к проксируемому серверу
+    proxy_read_timeout      10s; # максимальное время ожидания при получении отвктаа от проксируемомого сервера
+    proxy_set_header        SpaceVM-External-Ip $server_addr; # добавить заголовок к запросу при проксировании
+    proxy_hide_header       Server; # Скрыть заголовок при проксировании
+    ssl_protocols           TLSv1.2 TLSv1.3; # Какие типы шифрования использовать
+    add_header              Referrer-Policy "no-referrer"; # Добавить заголовок в ответ
+	keepalive_timeout       65; # поддерживать соединение с клиентом в секундах
+    include                 /etc/nginx/sites-enabled/*; # вставка конфигурации из других файлов в данное место
+
+    # 4. SERVER CONTEXT (VHost 1)
+    server {
+        ...
+    }
+}
+					</code></pre>					
+				</section>
+				<section>
+					<br>
+					<h3>Upstream</h3>
+					<blockquote>Блок upstream располагается в контексте http. Он позволяет объединить несколько физических или виртуальных серверов (бэкендов) в одну логическую группу, на которую затем ссылается директива proxy_pass.</blockquote>
+					<pre><code class="nginx">
+http {
+    # 3. HTTP CONTEXT
+    ...
+	# 1. Объявляем группу серверов (upstream)
+	upstream backend_pool {
+		least_conn; # Nginx отправляет запрос на тот сервер, у которого сейчас меньше всего активных соединений.
+		# ip_hash; # Выбор сервера зависит от IP-адреса клиента. Один и тот же пользователь всегда будет попадать на один и тот же бэкенд.
+		# Алгоритм по умолчанию - Round Robin
+		server 127.0.0.1:8001 weight=1 max_fails=3 fail_timeout=30s;
+		server 127.0.0.1:8002 weight=2 max_fails=3 fail_timeout=30s;
+		# Можно задать вес (мощный сервер получит больше трафика)
+		server 192.168.1.10:80 weight=3 max_fails=3 fail_timeout=30s;
+		server 192.168.1.11:80 backup; # Резервный, отправляются запросы, только если основные упали
+	}
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Server (Виртуальный хост)</h3>
+					<blockquote style="font-size: 25px;">Описывает настройки для конкретного домена. Может быть разделение по номеру порта (каждый Server слушает свой порт) и/или по заголовку в запросе Host при работе на одном порту.</blockquote>
+					<pre><code class="nginx">
+# 1. MAIN CONTEX
+worker_processes auto;
+...
+http {
+    # 3. HTTP CONTEXT
+    include mime.types;
+    ...
+    # 4. SERVER CONTEXT (VHost 1)
+    server {
+        listen 80; # Запросы на какой порт относятся к данному Server
+        listen [::]:80; # Для поддержки IPv6
+        server_name site1.com www.site1.com ; # Какие записи в заголовке запроса Host относятся к данному Server
+        return 301 https://$host$request_uri; # Отправить на любой запрос ответ с кодом 301 и URL для перенаправление (в заголовке Location) на 443 порт
+    }
+
+	server {
+        listen 443 ssl;
+        server_name site1.com www.site1.com ;
+		error_page  404 /error404.html; # Какую страницу использовать при ошибке
+        ...
+    }
+
+	# 4. SERVER CONTEXT (VHost 2)
+    server {
+        listen 443 ssl;
+        server_name site2;
+        ...
+        location / {
+            ...
+        }
+    }
+
+    # 4. SERVER CONTEXT (VHost 3)
+    server {
+        listen 8081;
+        server_name _;
+        ...
+    }
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Location (Локация)</h3>
+					<blockquote>Правила обработки конкретных URI (путей). Самая частая зона для настройки. Распологается внутри server { ... }</blockquote>
+					<pre><code class="nginx">
+# 1. MAIN CONTEXT
+worker_processes     auto;
+...    
+http {
+    # 3. HTTP CONTEXT
+    ...
+    # 4. SERVER CONTEXT 
+    server {
+		error_page  404 /error404.html; # Какую страницу использовать при ошибке
+        ...
+		# 5. LOCATION CONTEXT
+		location /error404.html { # Точное совпадение URI
+			internal; # Указывает, что данный URI является внутренним (служебным)
+			expires -1; # время кеширования
+			add_header "Content-Security-Policy" "$csp_header" always; # добавляем заголовок к ответу
+			root      /var/lib/ecp-veil/utils/other/nginx-error-page; # путь к файлам (склеивается с URI)
+			index     error404.html; # список файлов, которые сервер будет искать и отдавать по умолчанию
+			sub_filter 'NG_CSP_NONCE' $csp_nonce; # Поменять в теле ответа строку 'NG_CSP_NONCE' на значение переменной $csp_nonce
+			sub_filter_once off; # не останавливаться при замене в теле после нахождения первого вхождения
+		}
+		location ^~ /img/ { # префиксное совпадение останавливает поиск regex.
+			alias /var/www/static/; # подмена пути (URI /img/ -> /var/www/static/).
+			try_files $uri $uri/ =404; # проверка существования файла. Если нет файла отдать ошибку 404
+			...
+		}
+
+		location ~ \.php$ { #  регулярное выражение (чувствительно к регистру).
+			...
+		}
+		location ~* \.png$ { # регулярное выражение (без учета регистра).
+			...
+		}
+		location /api/ { # префиксное совпадение (самый низкий приоритет).
+			proxy_pass http://localhost:8000; # проксирование на бэкенд.
+			...
+		}
+    }
+}
+					</code></pre>	
+				</section>
+				<section>
+					<br>
+					<h3>Иерархия директорий Nginx в Linux</h3>
+					<blockquote>Понимание структуры каталогов Nginx критически важно для администрирования, отладки и обеспечения безопасности сервера. В Linux-системах (Debian/Ubuntu, CentOS/RHEL) структура следует стандартам FHS (Filesystem Hierarchy Standard).</blockquote>
+					<ul>
+						<li>/etc/nginx/nginx.conf - Главный конфигурационный файл. Содержит глобальные настройки и подключает остальные файлы через директиву include.</li>
+						<li>/etc/nginx/sites-available/ - Хранилище конфигураций виртуальных хостов (Server Blocks). Файлы в этой директории не активны. Nginx их игнорирует, пока на них нет ссылки.</li>
+						<li>/etc/nginx/sites-enabled/ - Директория «активных» сайтов. Чтобы включить сайт, создается символическая ссылка (symlink) из sites-available в sites-enabled.</li>
+					</ul>
+				</section>
+				<section>
+					<br>
+					<h3>Обратный прокси (Reverse Proxy) и балансировка нагрузки</h3>
+					<blockquote>Это самое частое применение. Nginx стоит «спереди» (как входная дверь) и распределяет трафик между несколькими бэкенд-серверами (Node.js, Python, PHP-FPM). Или проксирует соединяния в зависимости от заголовка запроса Host (размещение нескольких сайтов на одном IP адресе)</blockquote>
+					<pre><code class="nginx">
+http {
+    # 3. HTTP CONTEXT
+    ...
+	# 1. Объявляем группу серверов (upstream)
+	upstream backend_pool {
+		least_conn; # Nginx отправляет запрос на тот сервер, у которого сейчас меньше всего активных соединений.
+		server 192.168.1.9:80 weight=2 max_fails=3 fail_timeout=30s;
+		server 192.168.1.10:80 weight=3 max_fails=3 fail_timeout=30s;
+		server 192.168.1.11:80 backup; # Резервный, отправляются запросы, только если основные упали
+	}
+
+	# 2. Настройка виртуального хоста
+	server {
+		listen 80;
+		server_name example.com;
+
+		location / {
+			# Проксируем всё в нашу группу
+			proxy_pass http://backend_pool;
+
+			# Критически важные заголовки:
+			proxy_set_header Host $host;
+			proxy_set_header X-Real-IP $remote_addr;
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+			proxy_set_header X-Forwarded-Proto $scheme;
+		}
+	}
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Отдача статического контента</h3>
+					<blockquote>Nginx невероятно быстр в отдаче файлов (картинки, CSS, JS, HTML).</blockquote>
+					<pre><code class="nginx">
+http {
+    # 3. HTTP CONTEXT
+    ...
+	# 2. Настройка виртуального хоста
+	server {
+		listen 80;
+		server_name example.com;
+
+		location /static/ {
+			alias /var/www/project/static/;
+			expires 30d; # Кэшируем в браузере на 30 дней
+			add_header Cache-Control "public";
+			access_log off; # Не пишем логи для статики
+		}
+	}
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>Кэширование (Micro-caching)</h3>
+					<blockquote>Nginx может сам сохранять ответы бэкенда в памяти или на диск. Это спасает при «пиках» нагрузки (например, публикация новости), когда тысячи людей одновременно запрашивают одну и ту же страницу.</blockquote>
+					<pre><code class="nginx">
+http {
+    # 3. HTTP CONTEXT
+	proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=my_cache:10m inactive=60m;
+	...
+	server {
+		location / {
+			proxy_cache my_cache;
+			proxy_cache_valid 200 60s; # Кэшируем успешные ответы на 1 минуту
+			proxy_pass http://backend;
+		}
+	}
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>API Gateway (Входная точка для микросервисов)</h3>
+					<blockquote>Когда у вас много микросервисов, Nginx выступает единой точкой входа, маршрутизируя запросы по URL.</blockquote>
+					<pre><code class="nginx">
+http {
+    # 3. HTTP CONTEXT
+	...
+	server {
+		location /api/users/ {
+			proxy_pass http://users-service:8000;
+		}
+		location /api/orders/ {
+			proxy_pass http://orders-service:8001;
+		}
+		location /api/payments/ {
+			proxy_pass http://payments-service:8002;
+		}
+	}
+}
+					</code></pre>
+				</section>
+				<section>
+					<br>
+					<h3>API Gateway (Входная точка для микросервисов)</h3>
+					<blockquote>Когда у вас много микросервисов, Nginx выступает единой точкой входа, маршрутизируя запросы по URL.</blockquote>
+					<pre><code class="nginx">
+http {
+    # 3. HTTP CONTEXT
+	# Зона лимита: 1 запрос в секунду, burst до 5
+	limit_req_zone $binary_remote_addr zone=api_limit:10m rate=1r/s;
+	...
+	server {
+		location /api/login {
+			limit_req zone=api_limit burst=5 nodelay;
+			proxy_pass http://backend;
+		}
+	}
+}
+					</code></pre>
+				</section>
+			</section>
+			<section>
+				<h2>Спасибо за внимание</h2>
+			</section>
+		</div>
+	</div>
+
+	<aside id="presentable-icon" class="revealjs">
+		<a title="Содержание лекции" href="#/0/1">
+			<i class="fa fa-list-ul fa-2x"></i>
+		</a>
+	</aside>
+	<script src="../../js/bundle.min.js"></script>
+	<script src="../../js/qrcode.min.js"></script>
+	<script> 
+		const myLink = "https://kisa47.github.io/admin_lections/";
+		new QRCode(document.getElementById("qr-container"), {
+			text: myLink, width: 256,
+			height: 256,
+			colorDark : "#000000",
+			colorLight : "#ffffff",
+			correctLevel : QRCode.CorrectLevel.H 
+		});
+	</script>
+</body>
+
+</html>
